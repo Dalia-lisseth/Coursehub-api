@@ -11,6 +11,8 @@ type UpdateCourseInput = Partial<CreateCourseInput>;
 
 @Injectable()
 export class CoursesService {
+    private nextId = 4;
+    
     private readonly courses: Course[] = [
         { id: 1, title: 'NestJS Fundamentals', level: 'beginner' },
         { id: 2, title: 'Rest APIs with NestJS', level: 'beginner' },

@@ -34,11 +34,29 @@ Las reglas de negocio están en los servicios. Los controladores reciben los dat
 | GET | `/courses/:courseId/enrollments` | Matrículas de un curso. |
 
 
-
+## Evidencias
 
 Creacion de un nuevo estudiante:
 ![alt text](image.png)
 
 Consultar cursos:
 ![alt text](image-1.png)
+
+Consultar matricula:
+![alt text](image-2.png)
+
+No acepta matriculas duplicadas:
+![alt text](image-3.png)
+
+Se registro un nuevo estudiante:
+![alt text](image-4.png)
+
+Filtrado de estudiantes:
+![alt text](image-5.png)
+
+Filtrado de matricula por curso:
+![alt text](image-6.png)
+
+Cancelar matricula:
+![alt text](image-7.png)![alt text](image-8.png)
 

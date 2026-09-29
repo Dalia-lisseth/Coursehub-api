@@ -12,7 +12,7 @@ type Enrollment = {
   studentId: number;
   courseId: number;
 };
-
+//El servicio de matrículas gestiona la creación, recuperación y eliminación de matrículas, asegurando que los estudiantes estén activos y que no haya duplicados.
 @Injectable()
 export class EnrollmentsService {
   private readonly enrollments: Enrollment[] = [];
@@ -22,10 +22,10 @@ export class EnrollmentsService {
     private readonly studentsService: StudentsService,
     private readonly coursesService: CoursesService,
   ) {}
-
-  create(input: CreateEnrollmentDto): Enrollment {
+//Verifica si el estudiante está activo antes de crear la matrícula. Si el estudiante no está activo, lanza una excepción BadRequestException con el mensaje 'Student is inactive'.
+  async create(input: CreateEnrollmentDto): Promise<Enrollment> {
     const student = this.studentsService.findOne(input.studentId);
-    const course = this.coursesService.findOne(input.courseId);
+    const course = await this.coursesService.findOne(String(input.courseId));
 
     if (!course) {
       throw new NotFoundException(
@@ -36,7 +36,7 @@ export class EnrollmentsService {
     if (!student.isActive) {
       throw new BadRequestException('Student is inactive');
     }
-
+//Verifica si existe alguna matricula con el mismo studentId y courseId. Si existe, lanza una excepción BadRequestException con el mensaje 'Enrollment already exists'.
     const alreadyEnrolled = this.enrollments.some(
       (enrollment) =>
         enrollment.studentId === input.studentId &&
@@ -46,7 +46,7 @@ export class EnrollmentsService {
     if (alreadyEnrolled) {
       throw new BadRequestException('Enrollment already exists');
     }
-
+//Crea un nuevo objeto de matrícula con un id único, studentId y courseId, lo agrega a la lista de matrículas y devuelve el objeto de matrícula creado.
     const enrollment: Enrollment = {
       id: this.nextId++,
       studentId: input.studentId,
@@ -56,7 +56,7 @@ export class EnrollmentsService {
     this.enrollments.push(enrollment);
     return enrollment;
   }
-
+//Devuelve todas las matrículas, filtradas opcionalmente por studentId y/o courseId. Si se proporciona studentId, devuelve solo las matrículas del estudiante correspondiente. Si se proporciona courseId, devuelve solo las matrículas del curso correspondiente. Si no se proporcionan filtros, devuelve todas las matrículas.
   findAll(studentId?: number, courseId?: number): Enrollment[] {
     return this.enrollments.filter(
       (enrollment) =>
@@ -64,7 +64,9 @@ export class EnrollmentsService {
         (courseId === undefined || enrollment.courseId === courseId),
     );
   }
-
+//Devuelve una matrícula específica por su id. Si no se encuentra la matrícula,
+//  lanza una excepción NotFoundException con un mensaje que indica que la matrícula
+//  con el id especificado no fue encontrada.
   findOne(id: number): Enrollment {
     const enrollment = this.enrollments.find((item) => item.id === id);
 
@@ -74,14 +76,16 @@ export class EnrollmentsService {
 
     return enrollment;
   }
-
+//Devuelve todas las matrículas de un estudiante específico. 
+// Primero verifica si el estudiante existe llamando a studentsService.findOne(studentId). 
+// Luego llama a findAll(studentId) para obtener todas las matrículas del estudiante.
   findByStudent(studentId: number): Enrollment[] {
     this.studentsService.findOne(studentId);
     return this.findAll(studentId);
   }
 
-  findByCourse(courseId: number): Enrollment[] {
-    const course = this.coursesService.findOne(courseId);
+  async findByCourse(courseId: number): Promise<Enrollment[]> {
+    const course = await this.coursesService.findOne(String(courseId));
 
     if (!course) {
       throw new NotFoundException(`Course with id ${courseId} not found`);
@@ -89,7 +93,7 @@ export class EnrollmentsService {
 
     return this.findAll(undefined, courseId);
   }
-
+//Elimina una matrícula específica por su id. Primero llama a findOne(id) para obtener la matrícula. Luego encuentra el índice de la matrícula en la lista de matrículas y la elimina usando splice. Finalmente, devuelve la matrícula eliminada.
   remove(id: number): Enrollment {
     const enrollment = this.findOne(id);
     const index = this.enrollments.indexOf(enrollment);

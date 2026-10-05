@@ -8,6 +8,9 @@ import { WelcomeService } from './welcome.service.js';
 import { CoursesModule } from './courses/courses.module.js';
 import { StudentsModule } from './students/students.module.js';
 import { EnrollmentsModule } from './enrollments/enrollments.module.js';
+import { Course } from './courses/entities/course.entity.js';
+import { Student } from './students/entities/student.entity.js';
+import { Enrollment } from './enrollments/entities/enrollment.entity.js';
 
 @Module({
   imports: [
@@ -21,8 +24,10 @@ import { EnrollmentsModule } from './enrollments/enrollments.module.js';
         username: config.getOrThrow('DATABASE_USER'),
         password: config.getOrThrow('DATABASE_PASSWORD'),
         database: config.getOrThrow('DATABASE_NAME'),
-        autoLoadEntities: true,
-        synchronize: true,
+        entities: [Course, Student, Enrollment],
+        synchronize:
+          config.get('NODE_ENV', 'development') !== 'production' &&
+          config.get('DATABASE_SYNCHRONIZE', 'true') === 'true',
       }),
     }),
     CoursesModule,

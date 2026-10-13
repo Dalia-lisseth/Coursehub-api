@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateCourseDto } from './dto/create-course.dto.js';
+import { CoursesQueryDto } from './dto/courses-query.dto.js';
 import { UpdateCourseDto } from './dto/update-course.dto.js';
 import { Course } from './entities/course.entity.js';
 
@@ -12,8 +13,24 @@ export class CoursesService {
         private readonly coursesRepository: Repository<Course>,
     ) {}
 
-    findAll(level?: string) {
-        return this.coursesRepository.find({ where: level ? { level } : {} });
+    async findAll(query: CoursesQueryDto) {
+        const { level, page, limit, sort, order } = query;
+        const [data, total] = await this.coursesRepository.findAndCount({
+            where: level ? { level } : {},
+            order: { [sort]: order },
+            skip: (page - 1) * limit,
+            take: limit,
+        });
+
+        return {
+            data,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
     }
 
     async findOne(id: string): Promise<Course> {

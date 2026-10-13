@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import type { Enrollment } from '../../enrollments/entities/enrollment.entity.js';
 
 @Entity('students')
 export class Student {
@@ -22,4 +23,7 @@ export class Student {
 
   @Column()
   isActive: boolean;
+
+  @OneToMany('Enrollment', 'student')
+  enrollments: Enrollment[];
 }

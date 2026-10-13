@@ -9,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto.js';
+import { EnrollmentsQueryDto } from './dto/enrollments-query.dto.js';
 import { EnrollmentsService } from './enrollments.service.js';
 
 @Controller('enrollments')
@@ -21,13 +22,8 @@ export class EnrollmentsController {
   }
 
   @Get()
-  findAll(
-    @Query('studentId', new ParseIntPipe({ optional: true }))
-    studentId?: number,
-    @Query('courseId', new ParseIntPipe({ optional: true }))
-    courseId?: number,
-  ) {
-    return this.enrollmentsService.findAll(studentId, courseId);
+  findAll(@Query() query: EnrollmentsQueryDto) {
+    return this.enrollmentsService.findPage(query);
   }
 
   @Get(':id')

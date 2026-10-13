@@ -9,19 +9,55 @@ Proyecto realizado para la evaluación práctica de NestJS. La API administra cu
 - **Estudiantes:** administra estudiantes y su estado activo o inactivo.
 - **Matrículas:** relaciona estudiantes con cursos.
 
-Las reglas de negocio están en los servicios. Los controladores reciben los datos y delegan el procesamiento. La aplicación usa`ValidationPipe` global con `whitelist`, `forbidNonWhitelisted` y `transform`.
+Las reglas de negocio están en los servicios. Los controladores reciben los datos y delegan el procesamiento. La aplicación usa `ValidationPipe` global con `whitelist`, `forbidNonWhitelisted` y `transform`.
 
 La conexión PostgreSQL se configura mediante variables de entorno. Para
 desarrollo local se puede usar `DATABASE_SYNCHRONIZE=true`; la aplicación
 fuerza `synchronize=false` cuando `NODE_ENV=production`. El archivo `.env`
 local no se publica.
 
+## Configuración y ejecución
+
+Requisitos:
+
+- Node.js
+- PostgreSQL disponible en `localhost:5432` o en los valores configurados
+- Una base de datos llamada `coursehub` (o el nombre indicado en `.env`)
+
+Instala las dependencias:
+
+```bash
+npm install
+```
+
+Copia `.env.example` como `.env` y configura al menos estas variables:
+
+```env
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_NAME=coursehub
+DATABASE_USER=postgres
+DATABASE_PASSWORD=tu_password
+DATABASE_SYNCHRONIZE=true
+```
+
+Inicia la API en desarrollo:
+
+```bash
+npm run start:dev
+```
+
+En desarrollo, TypeORM crea o actualiza las tablas de las entidades
+`Course`, `Student` y `Enrollment` cuando `DATABASE_SYNCHRONIZE=true`. En
+producción se debe usar `DATABASE_SYNCHRONIZE=false` y gestionar los cambios
+de esquema mediante migraciones antes de iniciar la aplicación.
+
 
 ## Endpoints
 
 | Método | Endpoint | Descripción |
 | --- | --- | --- |
-| GET | `/courses` | Lista cursos. Acepta `level` como filtro. |
+| GET | `/courses` | Lista cursos con filtro, paginación y ordenamiento. |
 | GET | `/courses/:id` | Consulta un curso. |
 | POST | `/courses` | Crea un curso. |
 | PATCH | `/courses/:id` | Actualiza un curso. |
@@ -32,17 +68,93 @@ local no se publica.
 | PATCH | `/students/:id` | Actualiza un estudiante. |
 | DELETE | `/students/:id` | Elimina un estudiante. |
 | POST | `/enrollments` | Registra una matrícula. |
-| GET | `/enrollments` | Lista matrículas y permite filtros. |
+| GET | `/enrollments` | Busca y lista matrículas con relaciones, filtros, paginación y ordenamiento. |
 | GET | `/enrollments/:id` | Consulta una matrícula. |
 | DELETE | `/enrollments/:id` | Cancela una matrícula. |
 | GET | `/students/:studentId/enrollments` | Matrículas de un estudiante. |
 | GET | `/courses/:courseId/enrollments` | Matrículas de un curso. |
+
+### Consulta paginada de cursos
+
+`GET /courses` acepta los siguientes parámetros opcionales:
+
+| Parámetro | Valores | Predeterminado |
+| --- | --- | --- |
+| `level` | `beginner`, `intermediate` o `advanced` | Sin filtro |
+| `page` | Entero mayor o igual a `1` | `1` |
+| `limit` | Entero entre `1` y `100` | `10` |
+| `sort` | `id`, `title` o `level` | `id` |
+| `order` | `asc` o `desc` | `asc` |
+
+Ejemplo:
+
+```text
+GET /courses?level=intermediate&page=1&limit=10&sort=title&order=asc
+```
+
+La respuesta mantiene una forma consistente:
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "title": "Bases de Datos",
+      "level": "intermediate"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 1,
+    "totalPages": 1
+  }
+}
+```
+
+Los parámetros inválidos producen `400 Bad Request`; los valores de
+`sort` y `order` se limitan a una lista permitida para evitar ordenar por
+columnas no contempladas.
 
 El correo de los estudiantes es único, si se intenta crear o actualizar un
 estudiante con un correo ya registrado, la API responde `409 Conflict`.
 
 Las respuestas de matrículas incluyen `student` y `course` con la información relacionada, además de `studentId` y `courseId`.
 Los filtros `studentId` y `courseId` de `GET /enrollments` se pueden combinar.
+
+### Búsqueda relacionada de matrículas
+
+`GET /enrollments` usa un `QueryBuilder` con parámetros seguros y acepta:
+
+| Parámetro | Valores | Predeterminado |
+| --- | --- | --- |
+| `q` | Texto buscado en nombre/email del estudiante o título del curso | Sin búsqueda |
+| `studentId` | ID entero del estudiante | Sin filtro |
+| `courseId` | ID entero del curso | Sin filtro |
+| `page` | Entero mayor o igual a `1` | `1` |
+| `limit` | Entero entre `1` y `100` | `10` |
+| `sort` | `id`, `studentName` o `courseTitle` | `id` |
+| `order` | `asc` o `desc` | `asc` |
+
+Los filtros se pueden combinar. Por ejemplo:
+
+```text
+GET /enrollments?q=ana&studentId=1&page=1&limit=10&sort=courseTitle&order=asc
+```
+
+La respuesta incluye los datos relacionados y metadatos de paginación:
+
+```json
+{
+  "data": [],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 0,
+    "totalPages": 0
+  }
+}
+```
 
 ### Reglas de creación de matrículas
 
@@ -58,6 +170,17 @@ ejecutan en este orden:
 
 La última regla también está protegida por la restricción única compuesta de la
 base de datos para evitar duplicados en solicitudes concurrentes.
+
+## Verificación de persistencia
+
+La persistencia se puede comprobar con el flujo siguiente:
+
+1. Inicia PostgreSQL y la API.
+2. Crea un curso con `POST /courses`.
+3. Consulta el curso con `GET /courses` o `GET /courses/:id`.
+4. Detén y vuelve a iniciar la API.
+5. Consulta nuevamente el curso. Si sigue disponible, los datos se están
+   leyendo desde PostgreSQL y no desde un arreglo en memoria.
 
 
 ## Evidencias

@@ -9,6 +9,7 @@ import { QueryFailedError, Repository } from 'typeorm';
 import { CoursesService } from '../courses/courses.service.js';
 import { StudentsService } from '../students/students.service.js';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto.js';
+import { EnrollmentsQueryDto } from './dto/enrollments-query.dto.js';
 import { Enrollment } from './entities/enrollment.entity.js';
 
 type EnrollmentResponse = {
@@ -91,6 +92,52 @@ export class EnrollmentsService {
     });
 
     return enrollments.map((enrollment) => this.toResponse(enrollment));
+  }
+
+  async findPage(query: EnrollmentsQueryDto) {
+    const { q, studentId, courseId, page, limit, sort, order } = query;
+    const sortColumn = {
+      id: 'enrollment.id',
+      studentName: 'student.name',
+      courseTitle: 'course.title',
+    }[sort];
+
+    const builder = this.enrollmentsRepository
+      .createQueryBuilder('enrollment')
+      .innerJoinAndSelect('enrollment.student', 'student')
+      .innerJoinAndSelect('enrollment.course', 'course');
+
+    if (q?.trim()) {
+      builder.andWhere(
+        '(student.name ILIKE :search OR student.email ILIKE :search OR course.title ILIKE :search)',
+        { search: `%${q.trim()}%` },
+      );
+    }
+
+    if (studentId !== undefined) {
+      builder.andWhere('student.id = :studentId', { studentId });
+    }
+
+    if (courseId !== undefined) {
+      builder.andWhere('course.id = :courseId', { courseId });
+    }
+
+    builder
+      .orderBy(sortColumn, order.toUpperCase() as 'ASC' | 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [enrollments, total] = await builder.getManyAndCount();
+
+    return {
+      data: enrollments.map((enrollment) => this.toResponse(enrollment)),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: number): Promise<EnrollmentResponse> {

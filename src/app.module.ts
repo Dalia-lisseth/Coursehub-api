@@ -11,23 +11,27 @@ import { EnrollmentsModule } from './enrollments/enrollments.module.js';
 import { Course } from './courses/entities/course.entity.js';
 import { Student } from './students/entities/student.entity.js';
 import { Enrollment } from './enrollments/entities/enrollment.entity.js';
+import { validateEnvironment } from './config/env.validation.js';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: validateEnvironment,
+    }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
         host: config.getOrThrow('DATABASE_HOST'),
-        port: Number(config.getOrThrow('DATABASE_PORT')),
+        port: config.getOrThrow<number>('DATABASE_PORT'),
         username: config.getOrThrow('DATABASE_USER'),
         password: config.getOrThrow('DATABASE_PASSWORD'),
         database: config.getOrThrow('DATABASE_NAME'),
         entities: [Course, Student, Enrollment],
         synchronize:
-          config.get('NODE_ENV', 'development') !== 'production' &&
-          config.get('DATABASE_SYNCHRONIZE', 'true') === 'true',
+          config.getOrThrow<string>('NODE_ENV') !== 'production' &&
+          config.getOrThrow<string>('DATABASE_SYNCHRONIZE') === 'true',
       }),
     }),
     CoursesModule,

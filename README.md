@@ -33,6 +33,8 @@ npm install
 Copia `.env.example` como `.env` y configura al menos estas variables:
 
 ```env
+NODE_ENV=development
+PORT=3001
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_NAME=coursehub
@@ -51,6 +53,12 @@ En desarrollo, TypeORM crea o actualiza las tablas de las entidades
 `Course`, `Student` y `Enrollment` cuando `DATABASE_SYNCHRONIZE=true`. En
 producción se debe usar `DATABASE_SYNCHRONIZE=false` y gestionar los cambios
 de esquema mediante migraciones antes de iniciar la aplicación.
+
+La configuración se valida antes de inicializar la conexión. `PORT` y
+`DATABASE_PORT` deben ser puertos válidos, y `DATABASE_SYNCHRONIZE` solo puede
+tener los valores `true` o `false`. Si falta una variable obligatoria o tiene
+un valor inválido, la API se detiene al arrancar y muestra el error de
+configuración en lugar de iniciar con valores incompletos.
 
 
 ## Endpoints

@@ -39,9 +39,22 @@ export function validateEnvironment(
     throw new Error('DATABASE_SYNCHRONIZE must be either true or false');
   }
 
+  const nodeEnv = config.NODE_ENV ?? 'development';
+  if (!['development', 'test', 'production'].includes(String(nodeEnv))) {
+    throw new Error(
+      'NODE_ENV must be one of development, test, or production',
+    );
+  }
+
+  if (nodeEnv === 'production' && synchronize === 'true') {
+    throw new Error(
+      'DATABASE_SYNCHRONIZE must be false when NODE_ENV is production',
+    );
+  }
+
   return {
     ...config,
-    NODE_ENV: config.NODE_ENV ?? 'development',
+    NODE_ENV: nodeEnv,
     PORT: port,
     DATABASE_PORT: databasePort,
     DATABASE_SYNCHRONIZE: synchronize,

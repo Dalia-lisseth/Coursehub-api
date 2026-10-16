@@ -60,6 +60,43 @@ tener los valores `true` o `false`. Si falta una variable obligatoria o tiene
 un valor inválido, la API se detiene al arrancar y muestra el error de
 configuración en lugar de iniciar con valores incompletos.
 
+La política por ambiente es explícita: `development` y `test` pueden usar
+`DATABASE_SYNCHRONIZE=true`, mientras que `production` exige
+`DATABASE_SYNCHRONIZE=false`. El archivo
+[`.env.production.example`](./.env.production.example) sirve como plantilla
+para preparar la configuración de la siguiente etapa; no contiene secretos
+reales.
+
+### Verificación de los dos escenarios
+
+Para verificar desarrollo sin modificar datos, usa un `.env` local con
+`NODE_ENV=development` y `DATABASE_SYNCHRONIZE=true`, y ejecuta:
+
+```bash
+npm run build
+npm run start
+```
+
+La API debe iniciar y responder en el puerto configurado.
+
+Para verificar la política de producción sin desplegar, después de ejecutar
+`npm run build`, abre una terminal PowerShell separada y usa:
+
+```powershell
+$env:NODE_ENV="production"
+$env:DATABASE_SYNCHRONIZE="true"
+node dist/main
+```
+
+La aplicación debe detenerse antes de conectarse y mostrar:
+
+```text
+DATABASE_SYNCHRONIZE must be false when NODE_ENV is production
+```
+
+Después de la prueba, cierra esa terminal o elimina las variables temporales
+con `Remove-Item Env:NODE_ENV, Env:DATABASE_SYNCHRONIZE`.
+
 
 ## Endpoints
 

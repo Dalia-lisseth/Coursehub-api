@@ -45,8 +45,15 @@ export class UsersService {
     }
   }
 
+  async findByEmailWithPassword(email: string) {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.email = :email', { email: email.trim().toLowerCase() })
+      .getOne();
+  }
 
-  private toPublicUser(user: User) {
+  toPublicUser(user: User) {
     return {
       id: user.id,
       name: user.name,

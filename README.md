@@ -108,7 +108,8 @@ con `Remove-Item Env:NODE_ENV, Env:DATABASE_SYNCHRONIZE`.
 | POST | `/courses` | Crea un curso. |
 | PATCH | `/courses/:id` | Actualiza un curso. |
 | DELETE | `/courses/:id` | Elimina un curso. |
-| POST | `/users/register` | Registra un usuario sin almacenar su contraseña en texto plano. Devuelve `id`, `name`, `email` y `createdAt`. |
+| POST | `/auth/register` | Registra un usuario sin almacenar su contraseña en texto plano. Devuelve el usuario seguro dentro de `user` (`id`, `name`, `email` y `createdAt`). |
+| POST | `/auth/login` | Comprueba las credenciales con bcrypt y devuelve el usuario seguro dentro de `user`. Las credenciales inválidas responden `401 Unauthorized`. Este alcance todavía no genera JWT. |
 | GET | `/students` | Lista estudiantes. Acepta `career`, `semester` e `isActive` como filtros. |
 | GET | `/students/:id` | Consulta un estudiante. |
 | POST | `/students` | Crea un estudiante. |

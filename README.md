@@ -8,6 +8,7 @@ Proyecto realizado para la evaluación práctica de NestJS. La API administra cu
 - **Cursos:** administra los cursos disponibles.
 - **Estudiantes:** administra estudiantes y su estado activo o inactivo.
 - **Matrículas:** relaciona estudiantes con cursos.
+- **Usuarios:** registra usuarios almacenando únicamente un hash bcrypt de la contraseña.
 
 Las reglas de negocio están en los servicios. Los controladores reciben los datos y delegan el procesamiento. La aplicación usa `ValidationPipe` global con `whitelist`, `forbidNonWhitelisted` y `transform`.
 
@@ -107,6 +108,7 @@ con `Remove-Item Env:NODE_ENV, Env:DATABASE_SYNCHRONIZE`.
 | POST | `/courses` | Crea un curso. |
 | PATCH | `/courses/:id` | Actualiza un curso. |
 | DELETE | `/courses/:id` | Elimina un curso. |
+| POST | `/users/register` | Registra un usuario sin almacenar su contraseña en texto plano. Devuelve `id`, `name`, `email` y `createdAt`. |
 | GET | `/students` | Lista estudiantes. Acepta `career`, `semester` e `isActive` como filtros. |
 | GET | `/students/:id` | Consulta un estudiante. |
 | POST | `/students` | Crea un estudiante. |

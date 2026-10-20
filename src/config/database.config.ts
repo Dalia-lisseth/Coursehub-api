@@ -4,6 +4,7 @@ import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { Course } from '../courses/entities/course.entity.js';
 import { Enrollment } from '../enrollments/entities/enrollment.entity.js';
 import { Student } from '../students/entities/student.entity.js';
+import { User } from '../users/entities/user.entity.js';
 
 export function createDatabaseConfig(
   config: ConfigService,
@@ -17,7 +18,7 @@ export function createDatabaseConfig(
     username: config.getOrThrow<string>('DATABASE_USER'),
     password: config.getOrThrow<string>('DATABASE_PASSWORD'),
     database: config.getOrThrow<string>('DATABASE_NAME'),
-    entities: [Course, Student, Enrollment],
+    entities: [Course, Student, Enrollment, User],
     synchronize:
       environment !== 'production' &&
       config.getOrThrow<string>('DATABASE_SYNCHRONIZE') === 'true',

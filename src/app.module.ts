@@ -8,6 +8,7 @@ import { WelcomeService } from './welcome.service.js';
 import { CoursesModule } from './courses/courses.module.js';
 import { StudentsModule } from './students/students.module.js';
 import { EnrollmentsModule } from './enrollments/enrollments.module.js';
+import { UsersModule } from './users/users.module.js';
 import { validateEnvironment } from './config/env.validation.js';
 import { createDatabaseConfig } from './config/database.config.js';
 
@@ -24,6 +25,7 @@ import { createDatabaseConfig } from './config/database.config.js';
     CoursesModule,
     StudentsModule,
     EnrollmentsModule,
+    UsersModule,
   ],
   controllers: [AppController, WelcomeController],
   providers: [AppService, WelcomeService],

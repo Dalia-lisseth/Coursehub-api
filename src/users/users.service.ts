@@ -53,6 +53,10 @@ export class UsersService {
       .getOne();
   }
 
+  findById(id: number) {
+    return this.usersRepository.findOneBy({ id });
+  }
+
   toPublicUser(user: User) {
     return {
       id: user.id,

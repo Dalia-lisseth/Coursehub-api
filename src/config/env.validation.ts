@@ -4,6 +4,7 @@ const requiredVariables = [
   'DATABASE_NAME',
   'DATABASE_USER',
   'DATABASE_PASSWORD',
+  'JWT_SECRET',
 ] as const;
 
 export function validateEnvironment(
@@ -58,5 +59,6 @@ export function validateEnvironment(
     PORT: port,
     DATABASE_PORT: databasePort,
     DATABASE_SYNCHRONIZE: synchronize,
+    JWT_EXPIRES_IN: config.JWT_EXPIRES_IN ?? '1h',
   };
 }

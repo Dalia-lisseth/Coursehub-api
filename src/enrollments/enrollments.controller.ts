@@ -7,7 +7,9 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto.js';
 import { EnrollmentsQueryDto } from './dto/enrollments-query.dto.js';
 import { EnrollmentsService } from './enrollments.service.js';
@@ -17,6 +19,7 @@ export class EnrollmentsController {
   constructor(private readonly enrollmentsService: EnrollmentsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Body() body: CreateEnrollmentDto) {
     return this.enrollmentsService.create(body);
   }
@@ -32,6 +35,7 @@ export class EnrollmentsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.enrollmentsService.remove(id);
   }

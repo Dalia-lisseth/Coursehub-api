@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { StudentsController } from './students.controller.js';
 import { StudentsService } from './students.service.js';
@@ -14,6 +15,10 @@ describe('StudentsController', () => {
         StudentsService,
         {
           provide: getRepositoryToken(Student),
+          useValue: {},
+        },
+        {
+          provide: JwtService,
           useValue: {},
         },
       ],

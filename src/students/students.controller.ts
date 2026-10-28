@@ -9,7 +9,9 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { StudentsService } from './students.service.js';
 import { CreateStudentDto } from './dto/create-student.dto/create-student.dto.js';
 import { UpdateStudentDto } from './dto/update-student.dto/update-student.dto.js';
@@ -33,16 +35,19 @@ export class StudentsController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Body() createStudentDto: CreateStudentDto) {
     return this.studentsService.create(createStudentDto);
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   update(@Param('id') id: string, @Body() updateStudentDto: UpdateStudentDto) {
     return this.studentsService.update(Number(id), updateStudentDto);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   delete(@Param('id') id: string) {
     return this.studentsService.delete(Number(id));
   }

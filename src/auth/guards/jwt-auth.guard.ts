@@ -7,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 import type { JwtPayload } from '../auth.types.js';
+import { UserRole } from '../roles.js';
 
 type AuthenticatedRequest = Request & { user: JwtPayload };
 
@@ -29,7 +30,11 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
-      if (!Number.isInteger(payload.sub) || !payload.email) {
+      if (
+        !Number.isInteger(payload.sub) ||
+        !payload.email ||
+        !Object.values(UserRole).includes(payload.role)
+      ) {
         throw new UnauthorizedException('Invalid token payload');
       }
       request.user = payload;

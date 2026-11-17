@@ -6,6 +6,7 @@ import { UsersModule } from '../users/users.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { RolesGuard } from './guards/roles.guard.js';
 
 @Module({
   imports: [
@@ -16,15 +17,16 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
       useFactory: (configService: ConfigService): JwtModuleOptions => ({
         secret: configService.getOrThrow<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: configService.getOrThrow<
-            NonNullable<JwtModuleOptions['signOptions']>['expiresIn']
-          >('JWT_EXPIRES_IN'),
+          expiresIn:
+            configService.getOrThrow<
+              NonNullable<JwtModuleOptions['signOptions']>['expiresIn']
+            >('JWT_EXPIRES_IN'),
         },
       }),
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtAuthGuard],
-  exports: [JwtAuthGuard, JwtModule],
+  providers: [AuthService, JwtAuthGuard, RolesGuard],
+  exports: [JwtAuthGuard, RolesGuard, JwtModule],
 })
 export class AuthModule {}

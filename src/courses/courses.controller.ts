@@ -21,7 +21,9 @@ import { CreateCourseDto } from './dto/create-course.dto.js';
 import { CoursesQueryDto } from './dto/courses-query.dto.js';
 import { UpdateCourseDto } from './dto/update-course.dto.js';
 
-type AuthenticatedRequest = Request & { user: JwtPayload };
+type AuthenticatedRequest = Request & {
+  user: JwtPayload & { role: UserRole };
+};
 
 @Controller('courses')
 export class CoursesController {

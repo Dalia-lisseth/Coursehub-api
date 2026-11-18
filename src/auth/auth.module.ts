@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import type { JwtModuleOptions } from '@nestjs/jwt';
@@ -11,6 +12,7 @@ import { RolesGuard } from './guards/roles.guard.js';
 @Module({
   imports: [
     UsersModule,
+    ThrottlerModule.forRoot([{ limit: 5, ttl: 60000 }]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

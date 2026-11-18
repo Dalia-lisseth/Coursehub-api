@@ -42,6 +42,10 @@ DATABASE_NAME=coursehub
 DATABASE_USER=postgres
 DATABASE_PASSWORD=tu_password
 DATABASE_SYNCHRONIZE=true
+JWT_SECRET=una-clave-larga-y-aleatoria
+JWT_EXPIRES_IN=1h
+CORS_ORIGINS=http://localhost:3000
+HTTPS_ENABLED=false
 ```
 
 Inicia la API en desarrollo:
@@ -80,6 +84,20 @@ npm run start
 
 La API debe iniciar y responder en el puerto configurado.
 
+### Controles de seguridad
+
+- CORS permite únicamente los orígenes definidos en `CORS_ORIGINS`,
+  separados por comas.
+- `POST /auth/login` acepta como máximo cinco intentos por minuto por
+  dirección IP y responde `429 Too Many Requests` al superar el límite.
+- `GET /auth/admin` requiere un JWT válido con rol `admin`; otros roles
+  autenticados reciben `403 Forbidden`.
+- Para TLS, define `HTTPS_ENABLED=true`, `HTTPS_CERT_PATH` y
+  `HTTPS_KEY_PATH`. En producción, usa los valores de
+  [`.env.production.example`](./.env.production.example) y certificados
+  gestionados por el entorno de despliegue. En desarrollo local se mantiene
+  HTTP con `HTTPS_ENABLED=false`.
+
 Para verificar la política de producción sin desplegar, después de ejecutar
 `npm run build`, abre una terminal PowerShell separada y usa:
 
@@ -109,7 +127,8 @@ con `Remove-Item Env:NODE_ENV, Env:DATABASE_SYNCHRONIZE`.
 | PATCH | `/courses/:id` | Actualiza un curso. |
 | DELETE | `/courses/:id` | Elimina un curso. |
 | POST | `/auth/register` | Registra un usuario sin almacenar su contraseña en texto plano. Devuelve el usuario seguro dentro de `user` (`id`, `name`, `email` y `createdAt`). |
-| POST | `/auth/login` | Comprueba las credenciales con bcrypt y devuelve el usuario seguro dentro de `user`. Las credenciales inválidas responden `401 Unauthorized`. Este alcance todavía no genera JWT. |
+| POST | `/auth/login` | Comprueba las credenciales con bcrypt y devuelve un JWT y el usuario seguro dentro de `user`. Las credenciales inválidas responden `401 Unauthorized`; después de cinco intentos por minuto responde `429 Too Many Requests`. |
+| GET | `/auth/admin` | Ruta exclusiva para administradores. Requiere JWT y rol `admin`. |
 | GET | `/students` | Lista estudiantes. Acepta `career`, `semester` e `isActive` como filtros. |
 | GET | `/students/:id` | Consulta un estudiante. |
 | POST | `/students` | Crea un estudiante. |

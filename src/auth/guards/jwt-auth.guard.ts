@@ -33,7 +33,8 @@ export class JwtAuthGuard implements CanActivate {
       if (
         !Number.isInteger(payload.sub) ||
         !payload.email ||
-        !Object.values(UserRole).includes(payload.role)
+        (payload.role !== undefined &&
+          !Object.values(UserRole).includes(payload.role))
       ) {
         throw new UnauthorizedException('Invalid token payload');
       }

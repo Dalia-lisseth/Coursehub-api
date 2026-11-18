@@ -53,6 +53,30 @@ export function validateEnvironment(
     );
   }
 
+  const corsOrigins = String(config.CORS_ORIGINS ?? 'http://localhost:3000')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  if (corsOrigins.length === 0) {
+    throw new Error('CORS_ORIGINS must contain at least one origin');
+  }
+
+  const httpsEnabled = config.HTTPS_ENABLED ?? 'false';
+  if (httpsEnabled !== 'true' && httpsEnabled !== 'false') {
+    throw new Error('HTTPS_ENABLED must be either true or false');
+  }
+
+  if (httpsEnabled === 'true') {
+    const missingTlsVariables = ['HTTPS_CERT_PATH', 'HTTPS_KEY_PATH'].filter(
+      (variable) => !config[variable],
+    );
+    if (missingTlsVariables.length > 0) {
+      throw new Error(
+        `Missing required TLS variables: ${missingTlsVariables.join(', ')}`,
+      );
+    }
+  }
+
   return {
     ...config,
     NODE_ENV: nodeEnv,
@@ -60,5 +84,7 @@ export function validateEnvironment(
     DATABASE_PORT: databasePort,
     DATABASE_SYNCHRONIZE: synchronize,
     JWT_EXPIRES_IN: config.JWT_EXPIRES_IN ?? '1h',
+    CORS_ORIGINS: corsOrigins.join(','),
+    HTTPS_ENABLED: httpsEnabled,
   };
 }

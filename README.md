@@ -2,7 +2,6 @@
 
 Proyecto realizado para la evaluación práctica de NestJS. La API administra cursos, estudiantes y matrículas con persistencia en PostgreSQL.
 
-
 ## Módulos
 
 - **Cursos:** administra los cursos disponibles.
@@ -116,42 +115,56 @@ DATABASE_SYNCHRONIZE must be false when NODE_ENV is production
 Después de la prueba, cierra esa terminal o elimina las variables temporales
 con `Remove-Item Env:NODE_ENV, Env:DATABASE_SYNCHRONIZE`.
 
+### Arquitectura transversal
+
+La API registra cada solicitud con un middleware global y mide la duración de
+cada handler con un interceptor global. Los errores se normalizan mediante un
+filtro global con la forma `statusCode`, `timestamp`, `path` y `message`; los
+errores inesperados se registran y responden con `500` sin exponer detalles
+internos.
+
+El módulo de cursos muestra la separación por capas: el controlador delega en
+`CoursesService` (caso de uso), el servicio depende del puerto
+`CourseRepository` y `TypeOrmCourseRepository` actúa como adaptador de
+persistencia. Así, las reglas de negocio no dependen directamente de
+TypeORM y el repositorio puede sustituirse en pruebas o por otra fuente de
+datos.
 
 ## Endpoints
 
-| Método | Endpoint | Descripción |
-| --- | --- | --- |
-| GET | `/courses` | Lista cursos con filtro, paginación y ordenamiento. |
-| GET | `/courses/:id` | Consulta un curso. |
-| POST | `/courses` | Crea un curso. |
-| PATCH | `/courses/:id` | Actualiza un curso. |
-| DELETE | `/courses/:id` | Elimina un curso. |
-| POST | `/auth/register` | Registra un usuario sin almacenar su contraseña en texto plano. Devuelve el usuario seguro dentro de `user` (`id`, `name`, `email` y `createdAt`). |
-| POST | `/auth/login` | Comprueba las credenciales con bcrypt y devuelve un JWT y el usuario seguro dentro de `user`. Las credenciales inválidas responden `401 Unauthorized`; después de cinco intentos por minuto responde `429 Too Many Requests`. |
-| GET | `/auth/admin` | Ruta exclusiva para administradores. Requiere JWT y rol `admin`. |
-| GET | `/students` | Lista estudiantes. Acepta `career`, `semester` e `isActive` como filtros. |
-| GET | `/students/:id` | Consulta un estudiante. |
-| POST | `/students` | Crea un estudiante. |
-| PATCH | `/students/:id` | Actualiza un estudiante. |
-| DELETE | `/students/:id` | Elimina un estudiante. |
-| POST | `/enrollments` | Registra una matrícula. |
-| GET | `/enrollments` | Busca y lista matrículas con relaciones, filtros, paginación y ordenamiento. |
-| GET | `/enrollments/:id` | Consulta una matrícula. |
-| DELETE | `/enrollments/:id` | Cancela una matrícula. |
-| GET | `/students/:studentId/enrollments` | Matrículas de un estudiante. |
-| GET | `/courses/:courseId/enrollments` | Matrículas de un curso. |
+| Método | Endpoint                           | Descripción                                                                                                                                                                                                                   |
+| ------ | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/courses`                         | Lista cursos con filtro, paginación y ordenamiento.                                                                                                                                                                           |
+| GET    | `/courses/:id`                     | Consulta un curso.                                                                                                                                                                                                            |
+| POST   | `/courses`                         | Crea un curso.                                                                                                                                                                                                                |
+| PATCH  | `/courses/:id`                     | Actualiza un curso.                                                                                                                                                                                                           |
+| DELETE | `/courses/:id`                     | Elimina un curso.                                                                                                                                                                                                             |
+| POST   | `/auth/register`                   | Registra un usuario sin almacenar su contraseña en texto plano. Devuelve el usuario seguro dentro de `user` (`id`, `name`, `email` y `createdAt`).                                                                            |
+| POST   | `/auth/login`                      | Comprueba las credenciales con bcrypt y devuelve un JWT y el usuario seguro dentro de `user`. Las credenciales inválidas responden `401 Unauthorized`; después de cinco intentos por minuto responde `429 Too Many Requests`. |
+| GET    | `/auth/admin`                      | Ruta exclusiva para administradores. Requiere JWT y rol `admin`.                                                                                                                                                              |
+| GET    | `/students`                        | Lista estudiantes. Acepta `career`, `semester` e `isActive` como filtros.                                                                                                                                                     |
+| GET    | `/students/:id`                    | Consulta un estudiante.                                                                                                                                                                                                       |
+| POST   | `/students`                        | Crea un estudiante.                                                                                                                                                                                                           |
+| PATCH  | `/students/:id`                    | Actualiza un estudiante.                                                                                                                                                                                                      |
+| DELETE | `/students/:id`                    | Elimina un estudiante.                                                                                                                                                                                                        |
+| POST   | `/enrollments`                     | Registra una matrícula.                                                                                                                                                                                                       |
+| GET    | `/enrollments`                     | Busca y lista matrículas con relaciones, filtros, paginación y ordenamiento.                                                                                                                                                  |
+| GET    | `/enrollments/:id`                 | Consulta una matrícula.                                                                                                                                                                                                       |
+| DELETE | `/enrollments/:id`                 | Cancela una matrícula.                                                                                                                                                                                                        |
+| GET    | `/students/:studentId/enrollments` | Matrículas de un estudiante.                                                                                                                                                                                                  |
+| GET    | `/courses/:courseId/enrollments`   | Matrículas de un curso.                                                                                                                                                                                                       |
 
 ### Consulta paginada de cursos
 
 `GET /courses` acepta los siguientes parámetros opcionales:
 
-| Parámetro | Valores | Predeterminado |
-| --- | --- | --- |
-| `level` | `beginner`, `intermediate` o `advanced` | Sin filtro |
-| `page` | Entero mayor o igual a `1` | `1` |
-| `limit` | Entero entre `1` y `100` | `10` |
-| `sort` | `id`, `title` o `level` | `id` |
-| `order` | `asc` o `desc` | `asc` |
+| Parámetro | Valores                                 | Predeterminado |
+| --------- | --------------------------------------- | -------------- |
+| `level`   | `beginner`, `intermediate` o `advanced` | Sin filtro     |
+| `page`    | Entero mayor o igual a `1`              | `1`            |
+| `limit`   | Entero entre `1` y `100`                | `10`           |
+| `sort`    | `id`, `title` o `level`                 | `id`           |
+| `order`   | `asc` o `desc`                          | `asc`          |
 
 Ejemplo:
 
@@ -193,15 +206,15 @@ Los filtros `studentId` y `courseId` de `GET /enrollments` se pueden combinar.
 
 `GET /enrollments` usa un `QueryBuilder` con parámetros seguros y acepta:
 
-| Parámetro | Valores | Predeterminado |
-| --- | --- | --- |
-| `q` | Texto buscado en nombre/email del estudiante o título del curso | Sin búsqueda |
-| `studentId` | ID entero del estudiante | Sin filtro |
-| `courseId` | ID entero del curso | Sin filtro |
-| `page` | Entero mayor o igual a `1` | `1` |
-| `limit` | Entero entre `1` y `100` | `10` |
-| `sort` | `id`, `studentName` o `courseTitle` | `id` |
-| `order` | `asc` o `desc` | `asc` |
+| Parámetro   | Valores                                                         | Predeterminado |
+| ----------- | --------------------------------------------------------------- | -------------- |
+| `q`         | Texto buscado en nombre/email del estudiante o título del curso | Sin búsqueda   |
+| `studentId` | ID entero del estudiante                                        | Sin filtro     |
+| `courseId`  | ID entero del curso                                             | Sin filtro     |
+| `page`      | Entero mayor o igual a `1`                                      | `1`            |
+| `limit`     | Entero entre `1` y `100`                                        | `10`           |
+| `sort`      | `id`, `studentName` o `courseTitle`                             | `id`           |
+| `order`     | `asc` o `desc`                                                  | `asc`          |
 
 Los filtros se pueden combinar. Por ejemplo:
 
@@ -228,12 +241,12 @@ La respuesta incluye los datos relacionados y metadatos de paginación:
 Al crear una matrícula mediante `POST /enrollments`, las validaciones se
 ejecutan en este orden:
 
-| Situación | Respuesta |
-| --- | --- |
-| El estudiante no existe | `404 Not Found` |
-| El curso no existe | `404 Not Found` |
-| El estudiante está inactivo | `400 Bad Request` |
-| Ya existe la pareja estudiante–curso | `409 Conflict` |
+| Situación                            | Respuesta         |
+| ------------------------------------ | ----------------- |
+| El estudiante no existe              | `404 Not Found`   |
+| El curso no existe                   | `404 Not Found`   |
+| El estudiante está inactivo          | `400 Bad Request` |
+| Ya existe la pareja estudiante–curso | `409 Conflict`    |
 
 La última regla también está protegida por la restricción única compuesta de la
 base de datos para evitar duplicados en solicitudes concurrentes.
@@ -248,7 +261,6 @@ La persistencia se puede comprobar con el flujo siguiente:
 4. Detén y vuelve a iniciar la API.
 5. Consulta nuevamente el curso. Si sigue disponible, los datos se están
    leyendo desde PostgreSQL y no desde un arreglo en memoria.
-
 
 ## Evidencias
 

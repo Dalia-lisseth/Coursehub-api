@@ -1,9 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { CoursesController } from './courses.controller.js';
 import { CoursesService } from './courses.service.js';
-import { Course } from './entities/course.entity.js';
+import { COURSE_REPOSITORY } from './ports/course-repository.port.js';
 
 describe('CoursesController', () => {
   let controller: CoursesController;
@@ -14,7 +13,7 @@ describe('CoursesController', () => {
       providers: [
         CoursesService,
         {
-          provide: getRepositoryToken(Course),
+          provide: COURSE_REPOSITORY,
           useValue: {},
         },
         {

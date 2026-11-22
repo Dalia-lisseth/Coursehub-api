@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { CoursesService } from './courses.service.js';
-import { Course } from './entities/course.entity.js';
+import { COURSE_REPOSITORY } from './ports/course-repository.port.js';
 
 describe('CoursesService', () => {
   let service: CoursesService;
@@ -11,7 +10,7 @@ describe('CoursesService', () => {
       providers: [
         CoursesService,
         {
-          provide: getRepositoryToken(Course),
+          provide: COURSE_REPOSITORY,
           useValue: {},
         },
       ],

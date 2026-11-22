@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller.js';
@@ -12,6 +12,10 @@ import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { validateEnvironment } from './config/env.validation.js';
 import { createDatabaseConfig } from './config/database.config.js';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
+import { RequestTimingInterceptor } from './common/interceptors/request-timing.interceptor.js';
+import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware.js';
 
 @Module({
   imports: [
@@ -30,6 +34,21 @@ import { createDatabaseConfig } from './config/database.config.js';
     AuthModule,
   ],
   controllers: [AppController, WelcomeController],
-  providers: [AppService, WelcomeService],
+  providers: [
+    AppService,
+    WelcomeService,
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RequestTimingInterceptor,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestLoggingMiddleware).forRoutes('*');
+  }
+}

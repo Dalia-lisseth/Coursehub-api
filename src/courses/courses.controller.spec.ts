@@ -50,6 +50,23 @@ describe('CoursesController', () => {
     expect(controller).toBeDefined();
   });
 
+  it('delegates course listing with the query', async () => {
+    const query = { page: 1, limit: 10, sort: 'id', order: 'asc' } as never;
+    const result = { data: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0 } };
+    service.findAll.mockResolvedValue(result);
+
+    await expect(controller.findAll(query)).resolves.toBe(result);
+    expect(service.findAll).toHaveBeenCalledWith(query);
+  });
+
+  it('delegates finding a course by id', async () => {
+    const course = { id: 1, title: 'NestJS', level: 'beginner', ownerId: 7 };
+    service.findOne.mockResolvedValue(course);
+
+    await expect(controller.findOne('1')).resolves.toBe(course);
+    expect(service.findOne).toHaveBeenCalledWith('1');
+  });
+
   it('delegates course creation with the authenticated user id', async () => {
     const dto = { title: 'NestJS', level: 'beginner' };
     const request = { user: { sub: 7, role: UserRole.TEACHER } } as never;
@@ -75,5 +92,14 @@ describe('CoursesController', () => {
       7,
       UserRole.TEACHER,
     );
+  });
+
+  it('delegates removal with the authenticated user id and role', async () => {
+    const request = { user: { sub: 7, role: UserRole.TEACHER } } as never;
+    const removedCourse = { id: 1, title: 'NestJS', level: 'beginner', ownerId: 7 };
+    service.remove.mockResolvedValue(removedCourse);
+
+    await expect(controller.remove('1', request)).resolves.toBe(removedCourse);
+    expect(service.remove).toHaveBeenCalledWith('1', 7, UserRole.TEACHER);
   });
 });
